@@ -16,6 +16,8 @@ mongoose.connect('mongodb+srv://Shubham:shubham(56)@cluster0.nz6emhg.mongodb.net
 }).then(() => console.log("Connected to MongoDB"))
   .catch(err => console.error("MongoDB connection failed:", err));
 
+app.get('/', (req, res) => res.send('API is live.'));
+
 // GET all tasks
 app.get('/api/tasks', async (req, res) => {
   const tasks = await Task.find();
