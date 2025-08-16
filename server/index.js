@@ -11,6 +11,17 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json()); // Parse incoming JSON
 
+const path = require("path");
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+  });
+}
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -19,7 +30,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("✅ Connected to MongoDB"))
 .catch(err => console.error("❌ MongoDB connection failed:", err));
 
-app.get('/', (req, res) => res.send('API is live.'));
+//app.get('/', (req, res) => res.send('API is live.'));
 
 // GET all tasks
 app.get('/todos', async (req, res) => {
@@ -35,12 +46,30 @@ app.get('/todos/:id', async (req, res) => {
 });
 
 // POST create task
+// POST create task
 app.post('/todos', async (req, res) => {
-  const { title } = req.body;
-  const newTask = new Task({ title });
-  await newTask.save();
-  res.status(201).json(newTask);
+  try {
+    const { title, description, priority, status } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
+    const newTask = new Task({
+      title,
+      description,
+      priority,
+      status,
+    });
+
+    await newTask.save();
+    res.status(201).json(newTask);
+  } catch (err) {
+    console.error("❌ Error saving task:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
+
 
 // PUT update task
 app.put('/todos/:id', async (req, res) => {
